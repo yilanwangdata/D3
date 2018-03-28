@@ -1,4 +1,5 @@
-# something before path
+# something before path--d3 lines and text
+```
 var dataArray = [5,11,18];
 
 var svg = d3.select("body").append("svg").attr("height","100%").attr("width","100%");
@@ -60,7 +61,7 @@ svg.append("line")
       .attr("y1","150")
       .attr("x2",newX)
       .attr("y2","210");
-
+```
 # D3 path 
 ## for more things about D3 Path, see https://www.w3.org/TR/SVG/paths.html
-### d3.line is different from svg line, the d3.line is a generator 
+d3.line is different from svg line, the d3.line is a generator 
