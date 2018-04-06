@@ -363,3 +363,165 @@ svg.append("line")
       .attr("y2","210");
 ```
 For more information about ordinal scale, check https://goo.gl/186ghj
+Create color scale:
+```
+var dataArray = [5,11,18];
+var dataDays = ['Mon','Wed','Fri'];
+
+var rainbow=d3.scaleSequential(d3.interpolateRainbow).domain([0,10]);
+var rainbow2=d3.scaleSequential(d3.interpolateRainbow).domain([0,3]);
+var x = d3.scaleBand()
+            .domain(dataDays)
+            .range([0,170])
+            .paddingInner(0.1176);
+
+var xAxis = d3.axisBottom(x);
+
+var svg = d3.select("body").append("svg").attr("height","100%").attr("width","100%");
+
+var cat20=d3.schemeCategory20;
+console.log(cat20);
+
+svg.selectAll("rect")
+      .data(dataArray)
+      .enter().append("rect")
+                .attr("height",function(d,i){ return d*15; })
+                .attr("width","50")
+                .attr("fill",function(d,i){return rainbow(i);})
+                .attr("x",function(d,i){ return 60*i; })
+                .attr("y",function(d,i){ return 300-(d*15); });
+svg.append("g")
+      .attr("class","x axis hidden")
+      .attr("transform","translate(0,300)")
+      .call(xAxis);
+
+var newX = 300;
+svg.selectAll("circle.first")
+      .data(dataArray)
+      .enter().append("circle")
+                .attr("class","first")
+                .attr('fill',function(d,i){return rainbow2(i);})
+                .attr("cx",function(d,i){ newX+=(d*3)+(i*20); return newX; })
+                .attr("cy","100")
+                .attr("r",function(d){ return d*3; });
+
+var newX = 600;
+svg.selectAll("ellipse")
+      .data(dataArray)
+      .enter().append("ellipse")
+                .attr("class","second")
+                .attr('fill',function(d,i){return cat20[i];})
+                .attr("cx",function(d,i){ newX+=(d*3)+(i*20); return newX; })
+                .attr("cy","100")
+                .attr("rx",function(d){ return d*3; })
+                .attr("ry","30");
+
+var newX = 900;
+svg.selectAll("line")
+      .data(dataArray)
+      .enter().append("line")
+                .attr("x1",newX)
+                .attr("stroke-width","2")
+                .attr("y1",function(d,i){ return 80+(i*20); })
+                .attr("x2",function(d){ return newX+(d*15); })
+                .attr("y2",function(d,i){ return 80+(i*20); });
+
+var textArray = ['start','middle','end'];
+svg.append("text").selectAll("tspan")
+    .data(textArray)
+    .enter().append("tspan")
+      .attr("x",newX)
+      .attr("y",function(d,i){ return 150 + (i*30); })
+      .attr("fill","none")
+      .attr("stroke","blue")
+      .attr("stroke-width","2")
+      .attr("dominant-baseline","middle")
+      .attr("text-anchor","start")
+      .attr("font-size","30")
+      .text(function(d){ return d; });
+
+svg.append("line")
+      .attr("x1",newX)
+      .attr("y1","150")
+      .attr("x2",newX)
+      .attr("y2","210");
+```
+http://goo.gl/M8my58  http://goo.gl/xYDpk8 
+http://goo.gl/on5ifl  for other kind of scales
+Import a CSV file
+```
+var parseDate=d3.timeParse('%m/%d/%Y');
+
+d3.csv('prices.csv')
+     .row(function(d){return {
+       month:parseDate(d.month),price:Number(d.price.trim().slice(1))};})
+     .get(function(error, data){
+  console.log(data);
+})
+```
+drawing a line chart from csv
+```
+var parseDate = d3.timeParse("%m/%d/%Y");
+
+d3.csv("prices.csv")
+    .row(function(d){ return {month: parseDate(d.month), price:Number(d.price.trim().slice(1))}; })
+    .get(function(error,data){
+
+      var height=300;
+      var width=500;
+      var max=d3.max(data,function(d){return d.price;});
+      var minDate=d3.min(data,function(d){return d.month;});
+      var maxDate=d3.max(data, function(d){return d.month;});
+      var y=d3.scaleLinear()
+              .domain([0,max])
+              .range([height,0]);
+      var x=d3.scaleTime()
+              .domain([minDate,maxDate])
+              .range([0,width]);
+      var yAxis=d3.axisLeft(y);
+      var xAxis=d3.axisBottom(x);
+      var svg=d3.select('body').append('svg').attr('height','100%').attr('width','100%');
+      var margin={left:50,right:40,top:40,bottom:0};
+      var chartGroup=svg.append('g')
+                     .attr('tranform','translate('+margin.left+','+margin.top+')');
+
+      var line=d3.line()
+                 .x(function(d){return x(d.month);})
+                 .y(function(d){return y(d.price);});
+      chartGroup.append('path').attr('d',line(data));
+
+      chartGroup.append('g').attr('class','x axis').call(xAxis)
+                .attr('transform','translate(0,'+height+')');
+      chartGroup.append('g').attr('class','y axis').call(yAxis);
+
+
+})
+```
+create a tree
+```
+var height=200;
+var width=500;
+var margin={left:50,right:50,top:40,bottom:0};
+var tree=d3.tree().size([width, height]);
+var svg=d3.select('body').append('svg').attr('width','100%').attr('height','100%');
+var chartGroup=svg.append('g').attr('transform','translate('+margin.left+','+margin.top+')');
+
+d3.json('treeData.json').get(function(error,data){
+
+  var root=d3.hierarchy(data[0]);
+  tree(root);
+  chartGroup.selectAll('circle')
+            .data(root.descendants())
+            .enter().append('circle')
+            .attr('cx',function(d){return d.x;})
+            .attr('cy',function(d){return d.y;})
+            .attr('r','5');
+chartGroup.selectAll('path')
+          .data(root.descendants().slice(1))
+          .enter().append('path')
+          .attr('class','link')
+          .attr('d',function(d){return 'M'+d.x+','+d.y+'L'+d.parent.x+','+d.parant.y ;});
+
+})
+```
+mapping things: http://goo.gl/zsKJii
